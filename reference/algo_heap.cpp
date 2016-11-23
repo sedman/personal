@@ -51,7 +51,7 @@ class heap
       --idx;
       return list[1];
     }
-    int result = list[1];
+    T result = list[1];
     --idx;
     swap(list[idx], list[1]);
     int parent_idx = 1;
