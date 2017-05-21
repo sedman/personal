@@ -89,6 +89,7 @@ housing_prepared = preparation_pipeline.fit_transform(housing)
 
 #print(housing_prepared)
 
+#Linear Regression
 lin_reg = LinearRegression()
 lin_reg.fit(housing_prepared, housing_labels)
 some_data = housing.iloc[:5]
@@ -109,6 +110,7 @@ from sklearn.metrics import mean_absolute_error
 lin_mae = mean_absolute_error(housing_labels, housing_predictions)
 print(lin_mae)
 
+#Decision Tree
 from sklearn.tree import DecisionTreeRegressor
 tree_reg = DecisionTreeRegressor()
 tree_reg.fit(housing_prepared, housing_labels)
@@ -117,8 +119,69 @@ tree_mse = mean_squared_error(housing_labels, housing_predictions)
 tree_rmse = np.sqrt(tree_mse)
 print(tree_rmse)
 
-
 from sklearn.model_selection import cross_val_score
 tree_scores = cross_val_score(tree_reg, housing_prepared, housing_labels,
                               scoring="neg_mean_squared_error", cv=10)
 tree_rmse_scores = np.sqrt(-tree_scores)
+
+def display_scores(prefix, scores):
+    print(prefix)
+    print("Scores:", scores)
+    print("Mean:", scores.mean())
+    print("Standard deviation:", scores.std())
+
+display_scores("decision tree", tree_rmse_scores)
+
+lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels,
+                            scoring="neg_mean_squared_error", cv=10)
+lin_rmse_scores = np.sqrt(-lin_scores)
+display_scores("linear regression", lin_rmse_scores)
+
+#Random Forest
+from sklearn.ensemble import RandomForestRegressor
+forest_reg = RandomForestRegressor()
+forest_reg.fit(housing_prepared, housing_labels)
+housing_predictions = forest_reg.predict(housing_prepared)
+forest_mse = mean_squared_error(housing_labels, housing_predictions)
+forest_rmse = np.sqrt(forest_mse)
+forest_scores = cross_val_score(forest_reg, housing_prepared, housing_labels,
+                              scoring="neg_mean_squared_error", cv=10)
+forest_rmse_scores = np.sqrt(-forest_scores)
+display_scores("random forest", forest_rmse_scores)
+
+#Grid Search
+from sklearn.model_selection import GridSearchCV
+param_grid = [
+        {'n_estimators': [3, 10, 30], 'max_features': [2, 4, 6, 8]},
+        {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3, 4]},
+]
+forest_reg = RandomForestRegressor()
+grid_search = GridSearchCV(forest_reg, param_grid, cv=5,
+                           scoring='neg_mean_squared_error')
+grid_search.fit(housing_prepared, housing_labels)
+print(grid_search.best_params_)
+print(grid_search.best_estimator_)
+
+cvres = grid_search.cv_results_
+for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
+    print(np.sqrt(-mean_score), params)
+
+feature_importances = grid_search.best_estimator_.feature_importances_
+print(feature_importances)
+extra_attribs = ["rooms_per_hhold", "pop_per_hhold", "bedrooms_per_room"]
+#cat_one_hot_attribs = list(encoder.classes_)
+attributes = num_attribs + extra_attribs# + cat_one_hot_attribs
+list = sorted(zip(feature_importances, attributes), reverse=True)
+print(list)
+
+#Evaluate on the Test Set
+final_model = grid_search.best_estimator_
+
+X_test = strat_test_set.drop("median_house_value", axis=1)
+Y_test = strat_test_set["median_house_value"].copy()
+
+X_test_prepared = preparation_pipeline.transform(X_test)
+final_predictions = final_model.predict(X_test_prepared)
+final_mse = mean_squared_error(Y_test, final_predictions)
+final_rmse = np.sqrt(final_mse) # => evaluates to 48,209.6
+print(final_rmse)
