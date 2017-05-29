@@ -5,7 +5,11 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.base import clone
 from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_predict
 from sklearn.base import BaseEstimator
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import f1_score
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -34,9 +38,13 @@ def shuffle_data_set(x_train, y_train):
     shuffle_index = np.random.permutation(60000)
     return x_train[shuffle_index], y_train[shuffle_index]
 
+'''
+Randomized index ranging from 0 to 59999 for each iteration.
+This is split into train_fold and test_fold. 
+'''
 def cross_validation(sgd_clf, x_train, y_train):
-    skfolds = StratifiedKFold(n_splits=3, random_state=42)
-    for train_index, test_index in skfolds.split(x_train, y_train):
+    skfolds = StratifiedKFold(n_splits=5, random_state=42)
+    for train_index, test_index in skfolds.split(x_train, y_train): #40000, 20000
         clone_clf = clone(sgd_clf)
         x_train_folds = x_train[train_index]
         y_train_folds = y_train[train_index]
@@ -77,7 +85,7 @@ sgd_clf = train_using_binary_class(x_train, binary_y_train)
 result = sgd_clf.predict([x[59999]])
 print(result)
 
-cross_validation(sgd_clf, x_train, binary_y_train)
+#cross_validation(sgd_clf, x_train, binary_y_train)
 
 accuracy = cross_val_score(sgd_clf, x_train, binary_y_train, cv=3, scoring="accuracy")
 print(accuracy)
@@ -85,3 +93,19 @@ print(accuracy)
 never_9_clf = Never9Classifier()
 accuracy = cross_val_score(never_9_clf, x_train, binary_y_train, cv=3, scoring="accuracy")
 print(accuracy)
+
+y_train_pred = cross_val_predict(sgd_clf, x_train, binary_y_train, cv=3)
+print(len(y_train_pred))
+
+result_matrix = confusion_matrix(binary_y_train, y_train_pred)
+print(result_matrix)
+print(confusion_matrix(binary_y_train, binary_y_train))
+
+#맞는것과 틀린것을 얼마나 잘 판단하느냐?
+print("The precision of the classifier : " + str(result_matrix[0][0]/sum(result_matrix[0])))
+#맞는것을 얼마나 잘 판단하느냐?
+print("recall : ", str(result_matrix[0][0]/(result_matrix[0][0] + result_matrix[1][0])))
+
+print("precision core : " + str(precision_score(binary_y_train, y_train_pred)))
+print("recall core : " + str(recall_score(binary_y_train, y_train_pred)))
+print("f1_score : " + str(f1_score(binary_y_train, y_train_pred)))
