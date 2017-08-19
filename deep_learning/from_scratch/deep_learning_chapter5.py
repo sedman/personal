@@ -113,8 +113,7 @@ class TwoLayerNet(object):
         grads['b2'] = self.layers['Affine2'].db
         return grads
 
-    def train(self, x, t, learning_rate=0.1):
-        grad = self.gradient(x, t)
-        for key in ('W1', 'b1', 'W2', 'b2'):
-            self.params[key] -= learning_rate * grad[key]
+    def train(self, x, t, optimizer):
+        grads = self.gradient(x, t)
+        optimizer.update(self.params, grads)
 
