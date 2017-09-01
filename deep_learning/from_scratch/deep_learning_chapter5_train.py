@@ -2,6 +2,11 @@ import numpy as np
 from dataset.mnist import load_mnist
 from deep_learning_chapter5 import TwoLayerNet
 import matplotlib.pyplot as plt
+#from optimizer import SGD
+#from optimizer import Momentum
+#from optimizer import AdaGrad
+from optimizer import Adam
+#from optimizer import RMSprop
 
 def draw_acc_graph(epoch_list, train_acc_list, test_acc_list):
     plt.plot(epoch_list, train_acc_list, label="train accuracy")
@@ -38,10 +43,9 @@ def train():
 
     network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
 
-    iters_num = 10000
+    iters_num = 20000
     train_size = x_train.shape[0]
     batch_size = 100
-    learning_rate = 0.1
 
     train_loss_list = []
     train_acc_list = []
@@ -54,7 +58,8 @@ def train():
         x_batch = x_train[batch_mask]
         t_batch = t_train[batch_mask]
 
-        network.train(x_batch, t_batch, learning_rate)
+        optimizer = Adam()
+        network.train(x_batch, t_batch, optimizer)
 
         loss = network.loss(x_batch, t_batch)
         train_loss_list.append(loss)
