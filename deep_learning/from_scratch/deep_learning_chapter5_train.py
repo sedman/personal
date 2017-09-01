@@ -2,11 +2,11 @@ import numpy as np
 from dataset.mnist import load_mnist
 from deep_learning_chapter5 import TwoLayerNet
 import matplotlib.pyplot as plt
-from optimizer import SGD
-from optimizer import Momentum
-from optimizer import AdaGrad
+#from optimizer import SGD
+#from optimizer import Momentum
+#from optimizer import AdaGrad
 from optimizer import Adam
-from optimizer import RMSprop
+#from optimizer import RMSprop
 
 def draw_acc_graph(epoch_list, train_acc_list, test_acc_list):
     plt.plot(epoch_list, train_acc_list, label="train accuracy")
@@ -41,7 +41,7 @@ def gradient_check():
 def train():
     (x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
 
-    network = TwoLayerNet(input_size=784, hidden_size=5, output_size=10)
+    network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
 
     iters_num = 20000
     train_size = x_train.shape[0]
